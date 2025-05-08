@@ -57,12 +57,27 @@ rightStickY = controller.axis2 # Right joystick up-down
 
 buttons = [leftStickX, leftStickY, rightStickX, rightStickY] # Array of the joysticks (in case we want to run for loops)
 
-position = 0 # Variable for storing the position of the left joystick
+left_position_y = 0 # Variable for storing the up-down position of the left joystick
+left_position_x = 0 # Variable for storing the left-right position of the left joystick
+
+right_position_y = 0 # Variable for storing the up-down position of the right joystick
+right_position_x = 0 # Variable for storing the left-right position of the right joystick
+
 
 # Function to update the position variable
 def update_position():
-    global position # Define position as a global variable
-    position = leftStickY.position() # Update position to the position of the left joystick
+
+    # Define which variables are globally scoped so we can update them 
+    global left_position_y
+    global left_position_x
+    global right_position_y
+    global right_position_x
+
+    # Update all of the variables to be the position of the joystick
+    left_position_y = leftStickY.position()
+    left_position_x = leftStickX.position()
+    right_position_y = rightStickY.position()
+    right_position_x = rightStickX.position()
 
 # Function for printing the axis of the joysticks
 def printAxis():
@@ -94,16 +109,48 @@ while True:
     update_position() # Constantly update the position
 
     # If the position of the left stick is up
-    if position > 0:
-        wheelL.spin(FORWARD, 50) # Spin the left wheel forward at a velocity of 50
-        wheelR.spin(REVERSE, 50) # Spin the right wheel forward at a velocity of 50
+    if left_position_y > 0:
+
+        # If the right stick is turned to the right
+        if (right_position_x > 0):
+            wheelR.spin(FORWARD, 85) # Spin the right wheel in reverse (our forwards)
+
+        # If the right stick is turned to the left
+        elif (right_position_x < 0):
+            wheelL.spin(REVERSE, 85) # Spin the wheel forwards (our reverse)
+        else:
+            wheelL.spin(FORWARD, 100) # Spin the left wheel forward at a velocity of 50
+            wheelR.spin(REVERSE, 100) # Spin the right wheel forward at a velocity of 50
 
     # If the position of the left stick is down
-    elif position < 0:
-        wheelL.spin(REVERSE, 50) # Spin the left wheel back at a velocity of 50
-        wheelR.spin(FORWARD, 50) # Spin the right wheel back at a velocity of 50
+    elif left_position_y < 0:
 
-    # If the position is 0
+        # If the right stick is turned to the right
+        if (right_position_x > 0):
+            wheelR.spin(FORWARD, 85) # Spin the right wheel in reverse (our forwards)
+
+        # If the right stick is turned to the left
+        elif (right_position_x < 0):
+            wheelL.spin(REVERSE, 85) # Spin the wheel forwards (our reverse)
+        else:
+            wheelL.spin(REVERSE, 100) # Spin the left wheel back at a velocity of 50
+            wheelR.spin(FORWARD, 100) # Spin the right wheel back at a velocity of 50
+
+    # If the position of the left stick is right
+    elif right_position_x > 0:
+
+        # When the wheels alternate the robot turns, so this makes it turn
+        wheelL.spin(FORWARD, 50) # Spin the left wheel forward at a velocity of 50
+        wheelR.spin(FORWARD, 50) # Spin the right wheel backward at a velocity of 50
+
+    # If the position of the right stick is left
+    elif right_position_x < 0:
+
+        # When the wheels alternate the robot turns, so this makes it turn
+        wheelL.spin(REVERSE, 50) # Spin the left wheel forward at a velocity of 50
+        wheelR.spin(REVERSE, 50) # Spin the right wheel backward at a velocity of 50
+
+    # When the position of the right stick is 0
     else:
         wheelL.stop() # Stop the left wheel
         wheelR.stop() # Stop the right wheel
