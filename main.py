@@ -19,8 +19,6 @@ conveyor = Motor(Ports.PORT10) # Conveyor (motor at port 10)
 wheelR = Motor(Ports.PORT11)
 wheelL = Motor(Ports.PORT20)
 
-wheels = [wheelR, wheelL] # Array holding the wheels (in case we want to run for loops)
-
 # Function to spin the conveyor forward and carry the wheel
 def spin_forward():
     conveyor.spin(FORWARD, 100) # Spin the conveyor forward at a velocity of 100
@@ -35,23 +33,9 @@ def stop_spin():
 
 controller = Controller() # Initialize the controller for use
 
-L1 = controller.buttonL1 # The L1 button on the controller
-R1 = controller.buttonR1 # The L2 button on the controller
-
-# When L1 is pressed invoke spin(), when it's released invoke stop_spin()
-L1.pressed(spin_forward)
-R1.pressed(spin_backward)
-
-top_1 = [L1, R1] # An array containing the top buttons of 1
-
-# For each left button, where an individual button is represented as i
-for i in top_1:
-    i.released(stop_spin) # When the button is released, invoke stop_spin()
-
 # CONTROLLER JOYSTICKS
 leftStickX = controller.axis4 # Left joystick left-right
 leftStickY = controller.axis3 # Right joystick up-down
-
 rightStickX = controller.axis1 # Right joystick left-right
 rightStickY = controller.axis2 # Right joystick up-down
 
@@ -79,30 +63,70 @@ def update_position():
     right_position_y = rightStickY.position()
     right_position_x = rightStickX.position()
 
-# Function for printing the axis of the joysticks
-def printAxis():
+# Function to check for turns based on direction
+def check_turns(direction):
+        
+        # If the direction is forward
+        if direction == FORWARD:
+                
+            # If the right stick is turned to the right
+            if (right_position_x > 0):
 
-    # Print rightStickX
-    brain.screen.print("Right stick X: ")
-    brain.screen.print(rightStickX.position())
-    brain.screen.new_line()
+                # The left wheel slightly pushes against the right wheel so the turns aren't as erratic
+                wheelR.spin(FORWARD, 50) # Spin the left wheel forward at a velocity of 25 
+                wheelL.spin(FORWARD, 75) # Spin the right wheel in reverse (our forwards)
+                    
+            # If the right stick is turned to the left
+            elif (right_position_x < 0):
 
-    # Print rightStickY
-    brain.screen.print("Right stick Y: ")
-    brain.screen.print(rightStickY.position())
-    brain.screen.new_line()
+                # The right wheel slightly pushes against the left wheel so the turns aren't as erratic
+                wheelR.spin(REVERSE, 50) # Spin the right wheel forward (our reverse) at a velocity of 25
+                wheelL.spin(REVERSE, 75) # Spin the left wheel forward at a velocity of 75
+            else:
 
-    # Print leftStickX
-    brain.screen.print("Left stick X: ")
-    brain.screen.print(leftStickX.position())
-    brain.screen.new_line()
+                # Both wheels spin in the same direction
+                wheelL.spin(FORWARD, 100) # Spin the left wheel forward at a velocity of 100
+                wheelR.spin(REVERSE, 100) # Spin the right wheel reverse (our forwards) at a velocity of 100
 
-    # Print leftStickY
-    brain.screen.print("Left stick Y: ")
-    brain.screen.print(leftStickY.position())
-    brain.screen.new_line()
+        # If else (direction is REVERSE)
+        else:
 
-brain.screen.pressed(printAxis) # When the brain's screen is pressed, invoke printAxis()
+            # If the right stick is turned to the right
+            if (right_position_x > 0):
+
+                # The left wheel slightly pushes against the right wheel so the turns aren't as erratic
+                wheelR.spin(REVERSE, 75) # Spin the right wheel in reverse (our forwards)
+                wheelL.spin(REVERSE, 50) # Spin the left wheel forwards
+
+            # If the right stick is turned to the left
+            elif (right_position_x < 0):
+
+                # The right wheel slightly pushes against the left wheel so the turns aren't as erratic
+                wheelL.spin(FORWARD, 75) # Spin the left wheel forwards
+                wheelR.spin(FORWARD, 50)  # Spin the right wheel forwards (our reverse)
+
+            # If else (right stick is 0)
+            else:
+                wheelL.spin(REVERSE, 100) # Spin the left wheel in reverse at a velocity of 100
+                wheelR.spin(FORWARD, 100) # Spin the right wheel forwards (our reverse) at a velocity of 100
+    
+
+# The L1 and R1 buttons on the controller
+L1 = controller.buttonL1
+R1 = controller.buttonR1
+
+def check_conveyor():
+    # If L1 is being pressed
+    if L1.pressing():
+        spin_backward() # Spin the conveyor backwards
+
+    # If R1 is being pressed
+    elif R1.pressing():
+        spin_forward() # Spin the conveyor forwards
+
+    # If else (none or both)
+    else:
+        stop_spin() # Stop spinning the conveyor
 
 # Run forever
 while True:
@@ -110,31 +134,13 @@ while True:
 
     # If the position of the left stick is up
     if left_position_y > 0:
-
-        # If the right stick is turned to the right
-        if (right_position_x > 0):
-            wheelR.spin(FORWARD, 85) # Spin the right wheel in reverse (our forwards)
-
-        # If the right stick is turned to the left
-        elif (right_position_x < 0):
-            wheelL.spin(REVERSE, 85) # Spin the wheel forwards (our reverse)
-        else:
-            wheelL.spin(FORWARD, 100) # Spin the left wheel forward at a velocity of 50
-            wheelR.spin(REVERSE, 100) # Spin the right wheel forward at a velocity of 50
+        check_turns(FORWARD) # Check turns when the robot is driving forward
+        check_conveyor() # Check if the conveyor is spinning
 
     # If the position of the left stick is down
     elif left_position_y < 0:
-
-        # If the right stick is turned to the right
-        if (right_position_x > 0):
-            wheelR.spin(FORWARD, 85) # Spin the right wheel in reverse (our forwards)
-
-        # If the right stick is turned to the left
-        elif (right_position_x < 0):
-            wheelL.spin(REVERSE, 85) # Spin the wheel forwards (our reverse)
-        else:
-            wheelL.spin(REVERSE, 100) # Spin the left wheel back at a velocity of 50
-            wheelR.spin(FORWARD, 100) # Spin the right wheel back at a velocity of 50
+        check_turns(REVERSE)  # Check turns when the robot is driving in reverse
+        check_conveyor() # Check if the conveyor is spinning
 
     # If the position of the left stick is right
     elif right_position_x > 0:
@@ -142,6 +148,7 @@ while True:
         # When the wheels alternate the robot turns, so this makes it turn
         wheelL.spin(FORWARD, 50) # Spin the left wheel forward at a velocity of 50
         wheelR.spin(FORWARD, 50) # Spin the right wheel backward at a velocity of 50
+        check_conveyor() # Check if the conveyor is spinning
 
     # If the position of the right stick is left
     elif right_position_x < 0:
@@ -149,8 +156,10 @@ while True:
         # When the wheels alternate the robot turns, so this makes it turn
         wheelL.spin(REVERSE, 50) # Spin the left wheel forward at a velocity of 50
         wheelR.spin(REVERSE, 50) # Spin the right wheel backward at a velocity of 50
+        check_conveyor() # Check if the conveyor is spinning
 
     # When the position of the right stick is 0
     else:
         wheelL.stop() # Stop the left wheel
-        wheelR.stop() # Stop the right wheel
+        wheelR.stop() # Stop the right wheel 
+        check_conveyor() # Check if the conveyor is spinning
