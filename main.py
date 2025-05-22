@@ -9,6 +9,7 @@
 
 # Library imports
 from vex import *
+import math
 
 # Brain should be defined by default
 brain = Brain()
@@ -85,8 +86,8 @@ def check_turns(direction):
             else:
 
                 # Both wheels spin in the same direction
-                wheelL.spin(FORWARD, 100) # Spin the left wheel forward at a velocity of 100
-                wheelR.spin(REVERSE, 100) # Spin the right wheel reverse (our forwards) at a velocity of 100
+                wheelL.spin(FORWARD, math.sin(math.pi/200 * left_position_y) * 100) # Spin the left wheel forward at a velocity of 100
+                wheelR.spin(REVERSE, math.sin(math.pi/200 * left_position_y) * 100) # Spin the right wheel reverse (our forwards) at a velocity of 100
 
         # If else (direction is REVERSE)
         else:
@@ -107,8 +108,8 @@ def check_turns(direction):
 
             # If else (right stick is 0)
             else:
-                wheelL.spin(REVERSE, 100) # Spin the left wheel in reverse at a velocity of 100
-                wheelR.spin(FORWARD, 100) # Spin the right wheel forwards (our reverse) at a velocity of 100
+                wheelL.spin(REVERSE, (math.sin(math.pi/200 * left_position_y) * 100) * -1) # Spin the left wheel in reverse at a velocity of 100
+                wheelR.spin(FORWARD, (math.sin(math.pi/200 * left_position_y) * 100) * -1) # Spin the right wheel forwards (our reverse) at a velocity of 100
     
 
 # The L1 and R1 buttons on the controller
@@ -116,6 +117,7 @@ L1 = controller.buttonL1
 R1 = controller.buttonR1
 
 def check_conveyor():
+
     # If L1 is being pressed
     if L1.pressing():
         spin_backward() # Spin the conveyor backwards
